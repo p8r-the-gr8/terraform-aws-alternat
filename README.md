@@ -111,6 +111,8 @@ This helps operations teams respond quickly to failures or unexpected conditions
 
 Notifications are sent via [Amazon SNS](https://aws.amazon.com/sns/).
 
+Notifications make it easier to monitor the status of your NAT instance fleet and react to failures or health check flapping events.
+
 #### Email notifications
 
 To enable email notifications:
@@ -133,7 +135,51 @@ Function Name: alternat-connectivity-tester-us-west-2a
 alterNAT is performing a failover to standby nat gateway for route table rtb-0123456789abcd
 ```
 
-Notifications make it easier to monitor the status of your NAT instance fleet and react to failures or health check flapping events.
+#### Slack notifications
+
+To enable email notifications:
+- Slack configuration
+    - [Create a Slack app](https://docs.slack.dev/app-management/quickstart-app-settings/)
+    - `Features` -> `OAuth & Permissions` -> `Scopes` -> Add the `incoming-webhook` scope
+    - `Features` -> `Incoming Webhooks` -> Make sure it's `enabled` and click `Add New Webhook`
+    - `Features` -> `Incoming Webhooks` -> Grab the webhook URL
+    - [Invite the app](https://docs.slack.dev/app-management/quickstart-app-settings/#installing)
+- alterNAT configuration:
+    - Set `enable_notifications=true` in your variables.
+    - Set `slack_webhook_url_secret` to the Slack webhook URL.
+
+##### Minimal config:
+```hcl
+    slack_webhook_url_secret = "https://hooks.slack.com/services/ABCDEFGHIJKLM/ZYXWVUTSRQPON/ABCDEFGHIJKLmnopqrstuvwxyz"
+```
+
+##### Recommended config (for increased security and for CI/CD):
+
+Set the URL as the `TF_VAR_slack_webhook_url` environmental variable either in your shell or your CI/CD platform:
+```bash
+export TF_VAR_slack_webhook_url="https://hooks.slack.com/services/ABCDEFGHIJKLM/ZYXWVUTSRQPON/ABCDEFGHIJKLmnopqrstuvwxyz"
+```
+Use the environmental variable inside Terraform:
+```hcl
+variable "slack_webhook_url" {}
+
+module "alternat" {
+  ...
+  slack_webhook_url_secret = var.slack_webhook_url
+}
+```
+
+Example Slack notification message:
+
+```
+alterNAT: Failover to standby NAT Gateway
+
+Account ID: 123456789012
+Region: us-west-2
+Function Name: alternat-connectivity-tester-us-west-2a
+
+alterNAT is performing a failover to standby nat gateway for route table rtb-0123456789abcd
+```
 
 ## Drawbacks
 
